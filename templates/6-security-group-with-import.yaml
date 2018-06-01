@@ -1,0 +1,42 @@
+# ===================================================================
+# This is a sample YAML-formatted CloudFormation template.
+# ===================================================================
+AWSTemplateFormatVersion: 2010-09-09
+Description: Single instance template with parameters
+
+# ===================================================================
+# Parameters
+# ===================================================================
+Parameters:
+
+  SingleInstanceStackName:
+    Type: String
+    Description: Stack Name for Single Instance
+    Default: single-instance-with-output
+
+# ===================================================================
+# Resources
+# ===================================================================
+Resources:
+
+  SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: SampleImport
+      GroupDescription: Ingress from single instance
+      Tags:
+      - Key: Name
+        Value: SampleImport
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          # Import the private IP address of the single instance created in
+          # the referenced stack. The Join function will append "/32" after
+          # the IP address, similar to this: 172.31.11.241/32
+          CidrIp: !Join
+            - "/"
+            - 
+              - Fn::ImportValue:
+                  !Sub ${SingleInstanceStackName}-InstancePrivateIp
+              - "32"

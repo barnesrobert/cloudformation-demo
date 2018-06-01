@@ -1,0 +1,74 @@
+# ===================================================================
+# This is a sample YAML-formatted CloudFormation template.
+# ===================================================================
+AWSTemplateFormatVersion: 2010-09-09
+Description: Single instance template with parameters and output
+
+# ===================================================================
+# Parameters
+# ===================================================================
+Parameters:
+
+  ImageId:
+    Type: String
+    Description: Image ID of instance
+    Default: ami-14c5486b
+
+  InstanceType:
+    Type: String
+    Description: Instance type of instance
+    Default: t2.large
+    AllowedValues: 
+      - t2.micro
+      - t2.large
+      - m1.small
+      - m1.large
+
+# ===================================================================
+# Resources
+# ===================================================================
+Resources:
+
+  SingleInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref ImageId
+      InstanceType: !Ref InstanceType
+      Tags:
+      - Key: Name
+        Value: Single Instance
+
+# ===================================================================
+# Outputs
+# ===================================================================
+Outputs:
+
+  InstancePrivateIp:
+    Export:
+      Name: !Sub ${AWS::StackName}-InstancePrivateIp
+    Value: !GetAtt SingleInstance.PrivateIp
+
+  # Demonstration of using the Select function to get the first octet.
+  InstanceFirstOctet:
+    Export:
+      Name: !Sub ${AWS::StackName}-InstanceFirstOctet
+    Value: !Select [0, !Split [".", !GetAtt SingleInstance.PrivateIp]]
+
+  # Demonstration of using the Select and Join functions to get the first
+  # and second octets.
+  InstanceFirstAndSecondOctet:
+    Export:
+      Name: !Sub ${AWS::StackName}-InstanceFirstAndSecondOctet
+    Value: !Join
+      - "."
+      - 
+        - !Select 
+          - 0
+          - !Split 
+            - "."
+            - !GetAtt SingleInstance.PrivateIp
+        - !Select
+          - 1
+          - !Split
+            - "."
+            - !GetAtt SingleInstance.PrivateIp

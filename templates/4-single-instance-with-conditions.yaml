@@ -1,0 +1,109 @@
+# ===================================================================
+# This is a sample YAML-formatted CloudFormation template.
+# ===================================================================
+AWSTemplateFormatVersion: 2010-09-09
+Description: Single instance template with parameters, output, and conditions
+
+# ===================================================================
+# Parameters
+# ===================================================================
+Parameters:
+
+  ImageId:
+    Type: String
+    Description: Image ID of instance
+    Default: ami-14c5486b
+
+  InstanceType:
+    Type: String
+    Description: Instance type of instance
+    Default: t2.large
+    AllowedValues: 
+      - t2.micro
+      - t2.large
+      - m1.small
+      - m1.large
+
+  AddVolume:
+    Type: String
+    Description: Add a volume to the instance
+    Default: "No"
+    AllowedValues: 
+      - "Yes"
+      - "No"
+
+# ===================================================================
+# Conditions
+# ===================================================================
+Conditions:
+
+  ShouldAddVolume: !Equals [!Ref AddVolume, "Yes"]
+
+# ===================================================================
+# Resources
+# ===================================================================
+Resources:
+
+  SingleInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref ImageId
+      InstanceType: !Ref InstanceType
+      Tags:
+      - Key: Name
+        Value: Single Instance
+
+  # Conditionally add a volume.
+  NewVolume:
+    Type: AWS::EC2::Volume
+    Condition: ShouldAddVolume
+    Properties:
+      Size: 100
+      AvailabilityZone: !GetAtt SingleInstance.AvailabilityZone
+      Tags:
+      - Key: Name
+        Value: Single Instance
+
+  # The volume must be mounted to the instance.
+  MountPoint:
+    Type: AWS::EC2::VolumeAttachment
+    Condition: ShouldAddVolume
+    Properties:
+      InstanceId: !Ref SingleInstance
+      VolumeId: !Ref NewVolume
+      Device: /dev/sdh
+
+# ===================================================================
+# Outputs
+# ===================================================================
+Outputs:
+
+  InstancePrivateIp:
+    Export:
+      Name: !Sub ${AWS::StackName}-InstancePrivateIp
+    Value: !GetAtt SingleInstance.PrivateIp
+
+  # Demonstration of using the Select function to get the first octet.
+  InstanceFirstOctet:
+    Export:
+      Name: !Sub ${AWS::StackName}-InstanceFirstOctet
+    Value: !Select [0, !Split [".", !GetAtt SingleInstance.PrivateIp]]
+
+  # Demonstration of using the Select and Join functions to get the first
+  # and second octets.
+  InstanceFirstAndSecondOctet:
+    Export:
+      Name: !Sub ${AWS::StackName}-InstanceFirstAndSecondOctet
+    Value: !Join
+      - "."
+      - 
+        - !Select 
+          - 0
+          - !Split 
+            - "."
+            - !GetAtt SingleInstance.PrivateIp
+        - !Select
+          - 1
+          - !Split
+            - "."
+            - !GetAtt SingleInstance.PrivateIp

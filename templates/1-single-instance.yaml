@@ -1,0 +1,21 @@
+# ===================================================================
+# This is a sample YAML-formatted CloudFormation template.
+# ===================================================================
+AWSTemplateFormatVersion: 2010-09-09
+Description: Single instance template
+
+# ===================================================================
+# Resources
+# ===================================================================
+
+Resources:
+
+  SingleInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-14c5486b
+      InstanceType: t2.large
+      Tags:
+      - Key: Name
+        Value: Single Instance
+
